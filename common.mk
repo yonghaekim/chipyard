@@ -112,6 +112,7 @@ $(FIRRTL_FILE) $(ANNO_FILE) $(CHISEL_LOG_FILE) &: $(SCALA_SOURCES) $(SCALA_BUILD
 		--name $(long_name) \
 		--top-module $(MODEL_PACKAGE).$(MODEL) \
 		--legacy-configs $(CONFIG_PACKAGE):$(CONFIG) \
+		$(UPF_ASPECT) \
 		$(EXTRA_CHISEL_OPTIONS)) | tee $(CHISEL_LOG_FILE))
 
 define mfc_extra_anno_contents
