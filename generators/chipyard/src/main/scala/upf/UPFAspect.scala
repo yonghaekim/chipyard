@@ -5,7 +5,6 @@ import chisel3.aop.Aspect
 import firrtl.{AnnotationSeq}
 import chipyard.TestHarness
 import freechips.rocketchip.stage.phases.TargetDirKey
-
 import freechips.rocketchip.diplomacy.LazyModule
 
 abstract class UPFAspect[T <: TestHarness](upf: UPFFunc.UPFFunction) extends Aspect[T] {

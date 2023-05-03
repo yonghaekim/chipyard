@@ -1,13 +1,12 @@
 // See LICENSE for license details
 package chipyard.upf
 
-import chipyard.TestHarness
-import freechips.rocketchip.diplomacy.LazyModule
-
 import scala.collection.mutable.ListBuffer
-
 import scalax.collection.mutable.Graph
 import scalax.collection.GraphPredef._, scalax.collection.GraphEdge._
+
+import chipyard.TestHarness
+import freechips.rocketchip.diplomacy.LazyModule
 
 object ChipTopUPF {
 

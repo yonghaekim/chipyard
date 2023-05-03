@@ -20,7 +20,8 @@ HELP_COMPILATION_VARIABLES += \
 "   ENABLE_CUSTOM_FIRRTL_PASS = if set, enable custom firrtl passes (SFC lowers to LowFIRRTL & MFC converts to Verilog)" \
 "   ENABLE_YOSYS_FLOW         = if set, add compilation flags to enable the vlsi flow for yosys(tutorial flow)" \
 "   EXTRA_CHISEL_OPTIONS      = additional options to pass to the Chisel compiler" \
-"   EXTRA_FIRRTL_OPTIONS      = additional options to pass to the FIRRTL compiler"
+"   EXTRA_FIRRTL_OPTIONS      = additional options to pass to the FIRRTL compiler" \
+"   ASPECTS                   = additional aspect flows that will be run based on inputted pointers (such as UPF gen)"
 
 EXTRA_GENERATOR_REQS ?= $(BOOTROM_TARGETS)
 EXTRA_SIM_CXXFLAGS   ?=
@@ -28,6 +29,11 @@ EXTRA_SIM_LDFLAGS    ?=
 EXTRA_SIM_SOURCES    ?=
 EXTRA_SIM_REQS       ?=
 ENABLE_CUSTOM_FIRRTL_PASS += $(ENABLE_YOSYS_FLOW)
+
+ifneq ($(ASPECTS), )
+	comma = ,
+	ASPECT_ARGS = $(foreach aspect, $(subst $(comma), , $(ASPECTS)), --with-aspect $(aspect))
+endif
 
 #----------------------------------------------------------------------------
 HELP_SIMULATION_VARIABLES += \
@@ -112,7 +118,7 @@ $(FIRRTL_FILE) $(ANNO_FILE) $(CHISEL_LOG_FILE) &: $(SCALA_SOURCES) $(SCALA_BUILD
 		--name $(long_name) \
 		--top-module $(MODEL_PACKAGE).$(MODEL) \
 		--legacy-configs $(CONFIG_PACKAGE):$(CONFIG) \
-		$(UPF_ASPECT) \
+		$(ASPECT_ARGS) \
 		$(EXTRA_CHISEL_OPTIONS)) | tee $(CHISEL_LOG_FILE))
 
 define mfc_extra_anno_contents

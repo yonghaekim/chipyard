@@ -109,11 +109,13 @@ The simulation configuration (e.g. binaries) can be edited for your design. See 
 
 UPF Generation Flow
 -------------------------------
-To generate UPF for any design, first modify the UPFInputs in generators/chipyard/src/main/scala/upf/UPFInputs.scala to fit your design power specifications.
+This VLSI flow experimentally supports generating Chisel-based `UPF <https://vlsitutorials.com/upf-low-power-vlsi/>`__ files using `Chisel Aspects <https://javadoc.io/doc/edu.berkeley.cs/chisel3_2.13/latest/chisel3/aop/Aspect.html>`__.
 
-This involves filling in the upfInfo list with PowerDomainInput objects representing all the power domains you want in your design, along with specifying hierarchy and domain attributes.
+To generate UPF for any design, first modify the ``UPFInputs`` object in ``generators/chipyard/src/main/scala/upf/UPFInputs.scala`` to fit your design power specifications.
 
-The given example in UPFInputs corresponds to a dual-core Rocket config with 3 power domains (1 parent and 2 children).
+This involves filling in the ``upfInfo`` list with ``PowerDomainInput`` objects representing all the power domains you want in your design, along with specifying hierarchy and domain attributes.
+
+The given example in ``UPFInputs`` corresponds to a dual-core Rocket config with 3 power domains (1 parent domain with all uncore modules and 2 children corresponding to the Rocket tiles).
 
 To run the flow:
 
@@ -121,3 +123,5 @@ To run the flow:
     
     cd chipyard/vlsi
     make verilog ASPECTS=chipyard.upf.ChipTopUPFAspect
+
+The output UPF files will be dumped in ``vlsi/generated-src/upf``.
