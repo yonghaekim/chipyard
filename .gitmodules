@@ -130,3 +130,7 @@
 [submodule "generators/bar-fetchers"]
 	path = generators/bar-fetchers
 	url = https://github.com/ucb-bar/bar-fetchers.git
+[submodule "generators/saturn"]
+	path = generators/saturn
+	url = git@github.com:ucb-bar/saturn.git
+
