@@ -5,8 +5,6 @@
 #include <riscv/rocc.h>
 #include <random>
 #include <limits>
-
-#include <riscv/extension.h>
 //Need to include anything else here?
 
 class generic_t : public extension_t

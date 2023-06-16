@@ -258,6 +258,17 @@ class SpikeBlackBox(
         val data = Input(UInt(64.W))
       }
     }
+
+    val accel = new Bundle {
+      val a = new Bundle {
+        val ready = Input(Bool())
+        val valid = Output(Bool())
+        val insn = Output(UInt(64.W))
+      }
+      val d = new Bundle {
+        val result = Output(UInt(64.W))
+      }
+    }
   })
   addResource("/vsrc/spiketile.v")
   addResource("/csrc/spiketile.cc")
@@ -307,6 +318,8 @@ class SpikeTileModuleImp(outer: SpikeTile) extends BaseTileModuleImp(outer) {
   spike.io.ipc := PlusArg("spike-ipc", 10000, width=64)
 
   val blockBits = log2Ceil(p(CacheBlockBytes))
+
+  
 
   val icache_a_q = Module(new Queue(new TLBundleA(icacheEdge.bundle), 1, flow=true, pipe=true))
   spike.io.icache.a.ready := icache_a_q.io.enq.ready && icache_a_q.io.count === 0.U

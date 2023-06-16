@@ -7,6 +7,18 @@
 #include <vpi_user.h>
 #include <svdpi.h>
 
+//Not sure I need to include but probably
+#include <riscv/extension.h>
+#include <riscv/rocc.h>
+#include <random>
+#include <limits>
+#include <riscv/mmu.h>
+#include <riscv/trap.h>
+#include <stdexcept>
+#include <iostream>
+#include <assert.h>
+#include <math.h>
+
 enum transfer_t {
   NToB,
   NToT,
@@ -63,6 +75,9 @@ public:
   void proc_reset(unsigned id) override { };
   const char* get_symbol(uint64_t addr) override { return nullptr; };
 
+  bool accel_handshake(rocc_insn_t *insn);
+  void push_accel_insn(rocc_insn_t insn);
+
   bool icache_a(uint64_t *address, uint64_t *source);
   void icache_d(uint64_t sourceid, uint64_t data[8]);
 
@@ -117,6 +132,9 @@ private:
   std::vector<size_t> dcache_c_sourceids;
   std::vector<size_t> dcache_mmio_sourceids;
 
+  //Mihai accel
+  std::vector<rocc_insn_t> accel_insn_q;
+
   std::vector<cache_miss_t> dcache_miss_q;
   std::vector<cache_miss_t> icache_miss_q;
   std::vector<cache_miss_t> icache_inflight;
@@ -144,6 +162,32 @@ public:
   context_t spike_context;
   context_t stq_context;
 };
+
+/* Begin accel header file */
+//generic.h
+class generic_t : public extension_t
+{
+  public:
+    generic_t(chipyard_simif_t* s) {
+      simif = s;
+    }
+
+    const char* name() { return "generic" ; } 
+
+    reg_t custom0(rocc_insn_t insn, reg_t xs1, reg_t xs2);
+    reg_t custom1(rocc_insn_t insn, reg_t xs1, reg_t xs2);
+    reg_t custom2(rocc_insn_t insn, reg_t xs1, reg_t xs2);
+    reg_t custom3(rocc_insn_t insn, reg_t xs1, reg_t xs2);
+
+    virtual std::vector<insn_desc_t> get_instructions();
+    virtual std::vector<disasm_insn_t*> get_disasms();
+    
+    void reset() {};
+
+   protected:
+   chipyard_simif_t* simif; 
+};
+/* End Accel header file */
 
 context_t *host;
 std::map<int, tile_t*> tiles;
@@ -237,7 +281,12 @@ extern "C" void spike_tile(int hartid, char* isa,
                            int* mmio_a_size,
 
                            unsigned char mmio_d_valid,
-                           long long int mmio_d_data
+                           long long int mmio_d_data,
+
+                           //Need to add accelerator info
+                           unsigned char accel_ready,
+                           unsigned char* accel_valid,
+                           long long int* accel_insn
                            )
 {
   if (!host) {
@@ -273,6 +322,19 @@ extern "C" void spike_tile(int hartid, char* isa,
                                      log_file->get(),
                                      sout);
 
+    /*Begin accelerator section*/
+    std::function<extension_t*()> extension;
+    //extension = find_extension("generic");
+    //p->register_extension(extension());
+    generic_t* my_generic_extension = new generic_t(simif);
+    p->register_extension(my_generic_extension);
+
+    *accel_valid = 0;
+    if (accel_ready) {
+      *accel_valid = simif->accel_handshake((rocc_insn_t*) accel_insn);
+    }
+    /*End accelerator section*/
+
     p->enable_log_commits();
 
     s_vpi_vlog_info vinfo;
@@ -293,6 +355,7 @@ extern "C" void spike_tile(int hartid, char* isa,
     tiles[hartid] = new tile_t(p, simif);
     printf("Done constructing spike processor\n");
   }
+  
   tile_t* tile = tiles[hartid];
   chipyard_simif_t* simif = tile->simif;
   processor_t* proc = tile->proc;
@@ -358,6 +421,55 @@ extern "C" void spike_tile(int hartid, char* isa,
     simif->mmio_d(mmio_d_data);
   }
 }
+
+/*Begin Accelerator Section*/
+
+reg_t generic_t::custom0(rocc_insn_t insn, reg_t xs1, reg_t xs2) {
+  printf("[%s] custom0 called, pushing instruction to accelerator queue with opcode: %d\n", name(), insn.funct);
+  //Push to accel_insn_q
+  simif->push_accel_insn(insn);
+  return 0;
+}
+
+reg_t generic_t::custom1(rocc_insn_t insn, reg_t xs1, reg_t xs2) {
+  printf("[%s] custom1 called, pushing instruction to accelerator queue with opcode: %d\n", name(), insn.funct);
+  simif->push_accel_insn(insn);
+  return 0;
+}
+
+reg_t generic_t::custom2(rocc_insn_t insn, reg_t xs1, reg_t xs2) {
+  printf("[%s] custom2 called, pushing instruction to accelerator queue with opcode: %d\n", name(), insn.funct);
+  simif->push_accel_insn(insn);
+  return 0;
+}
+
+reg_t generic_t::custom3(rocc_insn_t insn, reg_t xs1, reg_t xs2) {
+  printf("[%s] custom3 called, pushing instruction to accelerator queue with opcode: %d\n", name(), insn.funct);
+  simif->push_accel_insn(insn);
+  return 0;
+}
+
+define_custom_func(generic_t, "generic", generic_custom0, custom0);
+define_custom_func(generic_t, "generic", generic_custom1, custom1);
+define_custom_func(generic_t, "generic", generic_custom2, custom2);
+define_custom_func(generic_t, "generic", generic_custom3, custom3);
+
+std::vector<insn_desc_t> generic_t::get_instructions()
+{
+  std::vector<insn_desc_t> insns;
+  push_custom_insn(insns, ROCC_OPCODE0, ROCC_OPCODE_MASK, ILLEGAL_INSN_FUNC, generic_custom0);
+  push_custom_insn(insns, ROCC_OPCODE1, ROCC_OPCODE_MASK, ILLEGAL_INSN_FUNC, generic_custom1);
+  push_custom_insn(insns, ROCC_OPCODE2, ROCC_OPCODE_MASK, ILLEGAL_INSN_FUNC, generic_custom2);
+  push_custom_insn(insns, ROCC_OPCODE3, ROCC_OPCODE_MASK, ILLEGAL_INSN_FUNC, generic_custom3);
+  return insns;
+}
+
+std::vector<disasm_insn_t*> generic_t::get_disasms()
+{
+  std::vector<disasm_insn_t*> insns;
+  return insns;
+}
+/*End Accelerator Section*/
 
 
 chipyard_simif_t::chipyard_simif_t(size_t icache_ways,
@@ -674,6 +786,24 @@ bool chipyard_simif_t::handle_cache_access(reg_t addr, size_t len,
 
   return false;
 }
+
+/*Begin accelerator section*/
+bool chipyard_simif_t::accel_handshake(rocc_insn_t* insn) {
+  if (accel_insn_q.empty()) {
+    return false;
+  }
+  *insn = accel_insn_q[0];
+  
+  accel_insn_q.erase(accel_insn_q.begin());
+  //printf("Proceeding with successful cpu/accel handshake");
+  return true;
+}
+
+void chipyard_simif_t::push_accel_insn(rocc_insn_t insn) {
+  printf("Pushing instruction to accelerator queue");
+  accel_insn_q.push_back(insn);
+}
+/*End accelerator section*/
 
 bool chipyard_simif_t::icache_a(uint64_t* address, uint64_t* sourceid) {
   if (icache_miss_q.empty() || icache_sourceids.empty()) {
