@@ -92,9 +92,6 @@
 [submodule "generators/gemmini"]
 	path = generators/gemmini
 	url = https://github.com/ucb-bar/gemmini
-[submodule "software/firemarshal"]
-	path = software/firemarshal
-	url = https://github.com/firesim/FireMarshal.git
 [submodule "generators/cva6"]
 	path = generators/cva6
 	url = https://github.com/ucb-bar/cva6-wrapper.git
@@ -134,3 +131,6 @@
 [submodule "generators/boom"]
 	path = generators/boom
 	url = https://github.com/yonghaekim/riscv-boom.git
+[submodule "software/firemarshal"]
+	path = software/firemarshal
+	url = https://github.com/yonghaekim/FireMarshal.git
