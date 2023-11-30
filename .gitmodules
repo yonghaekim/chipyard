@@ -82,18 +82,12 @@
 [submodule "toolchains/libgloss"]
 	path = toolchains/libgloss
 	url = https://github.com/ucb-bar/libgloss-htif.git
-[submodule "generators/constellation"]
-	path = generators/constellation
-	url = https://github.com/ucb-bar/constellation.git
-[submodule "generators/mempress"]
-	path = generators/mempress
-	url = https://github.com/ucb-bar/mempress.git
+[submodule "software/firemarshal"]
+	path = software/firemarshal
+	url = https://github.com/yonghaekim/FireMarshal.git
 [submodule "generators/boom"]
 	path = generators/boom
 	url = https://github.com/yonghaekim/riscv-boom.git
 [submodule "generators/rocket-chip"]
 	path = generators/rocket-chip
 	url = https://github.com/yonghaekim/rocket-chip.git
-[submodule "software/firemarshal"]
-	path = software/firemarshal
-	url = https://github.com/yonghaekim/FireMarshal.git
