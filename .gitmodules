@@ -91,3 +91,6 @@
 [submodule "generators/rocket-chip"]
 	path = generators/rocket-chip
 	url = https://github.com/yonghaekim/rocket-chip.git
+[submodule "generators/constellation"]
+	path = generators/constellation
+	url = https://github.com/ucb-bar/constellation.git
