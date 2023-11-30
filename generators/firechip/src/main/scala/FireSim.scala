@@ -262,7 +262,9 @@ class FireSim(implicit val p: Parameters) extends RawModule with HasHarnessSigna
     // instantiation of the dut, otherwise the initial instance will be
     // reused across each node
     import freechips.rocketchip.subsystem.AsyncClockGroupsKey
-    val lazyModule = LazyModule(p(BuildTop)(p))
+    val lazyModule = LazyModule(p(BuildTop)(p.alterPartial({
+      case AsyncClockGroupsKey => p(AsyncClockGroupsKey).copy
+    })))
     val module = Module(lazyModule.module)
 
     lazyModule match { case d: HasIOBinders =>
