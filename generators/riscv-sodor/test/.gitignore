@@ -1,5 +1,0 @@
-*.o
-*.riscv
-*.out
-*.dump
-rv32ui-p-*
